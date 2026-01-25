@@ -5,11 +5,9 @@ Provides in-memory caching with optional persistence to Delta tables
 for shared cache across multiple instances.
 """
 
-import json
 import logging
 import time
 from dataclasses import dataclass, field
-from datetime import datetime
 from typing import Any, Callable, Dict, Optional
 
 logger = logging.getLogger(__name__)

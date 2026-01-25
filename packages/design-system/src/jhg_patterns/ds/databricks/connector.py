@@ -4,11 +4,40 @@ Databricks SQL connector wrapper with connection management.
 
 import logging
 import os
+import re
 from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Generator
 
 logger = logging.getLogger(__name__)
+
+# Regex for valid Delta table identifiers: catalog.schema.table or schema.table or table
+# Allows letters, digits, underscores. Each segment must start with letter or underscore.
+_TABLE_NAME_PATTERN = re.compile(
+    r"^[a-zA-Z_][a-zA-Z0-9_]*(\.[a-zA-Z_][a-zA-Z0-9_]*){0,2}$"
+)
+
+
+def _validate_table_name(table: str) -> str:
+    """
+    Validate table name to prevent SQL injection.
+
+    Args:
+        table: Table name (catalog.schema.table, schema.table, or table)
+
+    Returns:
+        The validated table name
+
+    Raises:
+        ValueError: If table name contains invalid characters
+    """
+    if not table or not _TABLE_NAME_PATTERN.match(table):
+        raise ValueError(
+            f"Invalid table name: '{table}'. "
+            "Must be alphanumeric with underscores, in format: "
+            "table, schema.table, or catalog.schema.table"
+        )
+    return table
 
 # Global connector instance
 _connector: Optional["DatabricksConnector"] = None
@@ -186,6 +215,9 @@ class DatabricksConnector:
         """
         Execute a statement with multiple parameter sets.
 
+        Uses batch execution for better performance (single round-trip
+        instead of N separate queries).
+
         Args:
             sql: SQL statement
             params_list: List of parameter dictionaries
@@ -193,12 +225,12 @@ class DatabricksConnector:
         Returns:
             Total number of affected rows
         """
-        total = 0
+        if not params_list:
+            return 0
+
         with self.cursor() as cursor:
-            for params in params_list:
-                cursor.execute(sql, params)
-                total += cursor.rowcount
-        return total
+            cursor.executemany(sql, params_list)
+            return cursor.rowcount
 
     def table_exists(self, table: str) -> bool:
         """
@@ -209,7 +241,11 @@ class DatabricksConnector:
 
         Returns:
             True if table exists
+
+        Raises:
+            ValueError: If table name contains invalid characters
         """
+        _validate_table_name(table)
         try:
             self.query(f"SELECT 1 FROM {table} LIMIT 0")
             return True
@@ -225,7 +261,11 @@ class DatabricksConnector:
 
         Returns:
             List of column definitions
+
+        Raises:
+            ValueError: If table name contains invalid characters
         """
+        _validate_table_name(table)
         return self.query(f"DESCRIBE {table}")
 
 

@@ -387,5 +387,5 @@ def api_route(
                 logger.exception(f"Error in {func.__name__}: {e}")
                 return api_error('Internal server error', status=500)
 
-        return func
+        return wrapper
     return decorator

@@ -6,7 +6,11 @@ import logging
 from datetime import datetime
 from typing import Any, Dict, Optional
 
-from jhg_patterns.ds.databricks.connector import DatabricksConnector, get_connector
+from jhg_patterns.ds.databricks.connector import (
+    DatabricksConnector,
+    get_connector,
+    _validate_table_name,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -60,10 +64,13 @@ class AuditLogger:
             app_name: Application name for log entries
             table: Audit log table name
             auto_create: Create table if it doesn't exist
+
+        Raises:
+            ValueError: If table name contains invalid characters
         """
         self.connector = connector or get_connector()
         self.app_name = app_name
-        self.table = table
+        self.table = _validate_table_name(table)  # Validate to prevent SQL injection
         self._table_checked = False
 
         if auto_create:

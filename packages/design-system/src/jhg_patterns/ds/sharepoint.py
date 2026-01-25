@@ -26,7 +26,6 @@ Usage:
 import logging
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
-from urllib.parse import quote
 
 from .graph import GraphClient, GraphConfig, GraphError
 
