@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% from "macros/buttons.html" import button, button_group %}
+{% from "macros/badges.html" import badge, status_badge, priority_badge %}
+{% from "macros/cards.html" import card, summary_card, stat_card %}
+{% from "macros/alerts.html" import alert, banner %}
+{% from "macros/modals.html" import modal, confirm_modal, modal_trigger %}
+{% from "macros/layout.html" import page_header, section, divider, empty_state, progress_bar, loading_spinner %}
+
+{% block title %}Components | {{ super() }}{% endblock %}
+
+{% block content %}
+{{ page_header("Component Library", subtitle="All available UI components in the JHG Design System") }}
+
+{# Buttons Section #}
+{% call section(title="Buttons", description="Various button styles and sizes") %}
+<div class="space-y-4">
+    <div class="flex flex-wrap gap-3">
+        {{ button("Primary", variant="primary") }}
+        {{ button("Secondary", variant="secondary") }}
+        {{ button("Outline", variant="outline") }}
+        {{ button("Ghost", variant="ghost") }}
+        {{ button("Danger", variant="danger") }}
+        {{ button("Success", variant="success") }}
+    </div>
+    <div class="flex flex-wrap gap-3">
+        {{ button("Small", variant="primary", size="sm") }}
+        {{ button("Medium", variant="primary", size="md") }}
+        {{ button("Large", variant="primary", size="lg") }}
+    </div>
+    <div class="flex flex-wrap gap-3">
+        {{ button("Disabled", variant="primary", disabled=true) }}
+        {{ button("Loading", variant="primary", loading=true) }}
+        {{ button("With Icon", variant="primary", icon='<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>') }}
+    </div>
+</div>
+{% endcall %}
+
+{{ divider() }}
+
+{# Badges Section #}
+{% call section(title="Badges", description="Status indicators and labels") %}
+<div class="space-y-4">
+    <div class="flex flex-wrap gap-3">
+        {{ badge("Neutral", variant="neutral") }}
+        {{ badge("Success", variant="success") }}
+        {{ badge("Warning", variant="warning") }}
+        {{ badge("Error", variant="error") }}
+        {{ badge("Info", variant="info") }}
+    </div>
+    <div class="flex flex-wrap gap-3">
+        {{ status_badge("Active", status="active") }}
+        {{ status_badge("Pending", status="pending") }}
+        {{ status_badge("Failed", status="failed") }}
+        {{ status_badge("Draft", status="draft") }}
+        {{ status_badge("New", status="new") }}
+    </div>
+    <div class="flex flex-wrap gap-3">
+        {{ priority_badge(1) }}
+        {{ priority_badge(2) }}
+        {{ priority_badge(3) }}
+        {{ priority_badge("high") }}
+        {{ priority_badge("medium") }}
+        {{ priority_badge("low") }}
+    </div>
+</div>
+{% endcall %}
+
+{{ divider() }}
+
+{# Alerts Section #}
+{% call section(title="Alerts", description="Notification and feedback messages") %}
+<div class="space-y-4 max-w-2xl">
+    {{ alert("Success!", "Your changes have been saved successfully.", variant="success") }}
+    {{ alert("Warning", "This action may have unintended consequences.", variant="warning", dismissible=true) }}
+    {{ alert("Error", "Something went wrong. Please try again.", variant="error") }}
+    {{ alert("Information", "Here's some helpful context about this feature.", variant="info", dismissible=true) }}
+</div>
+{% endcall %}
+
+{{ divider() }}
+
+{# Cards Section #}
+{% call section(title="Cards", description="Content containers") %}
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    {% call card(title="Basic Card", subtitle="A simple card component") %}
+    <p class="text-gray-600">Cards are used to group related content together.</p>
+    {% endcall %}
+
+    {% call card(title="Hoverable Card", hoverable=true) %}
+    <p class="text-gray-600">Hover over this card to see the shadow effect.</p>
+    {% endcall %}
+
+    {{ stat_card("Active Users", "1,234", subtitle="Updated today", variant="primary", icon='<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>') }}
+</div>
+{% endcall %}
+
+{{ divider() }}
+
+{# Progress & Loading Section #}
+{% call section(title="Progress & Loading", description="Progress indicators and spinners") %}
+<div class="space-y-6 max-w-lg">
+    {{ progress_bar(75, variant="primary", show_label=true) }}
+    {{ progress_bar(45, variant="secondary", show_label=true) }}
+    {{ progress_bar(90, variant="success", show_label=true, size="lg") }}
+    {{ progress_bar(25, variant="warning", size="sm") }}
+
+    <div class="flex items-center gap-8 mt-6">
+        {{ loading_spinner(size="sm") }}
+        {{ loading_spinner(size="md") }}
+        {{ loading_spinner(size="lg") }}
+    </div>
+</div>
+{% endcall %}
+
+{{ divider() }}
+
+{# Modals Section #}
+{% call section(title="Modals", description="Dialog windows and confirmations") %}
+<div class="flex flex-wrap gap-3">
+    {{ modal_trigger("demo-modal", "Open Modal", variant="primary") }}
+    {{ modal_trigger("confirm-delete", "Delete Confirmation", variant="danger") }}
+</div>
+
+{% call modal("demo-modal", title="Example Modal") %}
+<p class="text-gray-600 mb-4">This is an example modal dialog. You can put any content here.</p>
+<p class="text-gray-600">Click outside or press Escape to close.</p>
+{% endcall %}
+
+{{ confirm_modal("confirm-delete", title="Confirm Delete", message="Are you sure you want to delete this item? This action cannot be undone.", action="/delete", confirm_text="Delete", variant="danger") }}
+{% endcall %}
+
+{{ divider() }}
+
+{# Empty State Section #}
+{% call section(title="Empty States", description="Placeholder for missing content") %}
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="bg-white rounded-lg border">
+        {{ empty_state("No data available", "Start by adding your first item to see it here.", action_text="Add Item", action_href="#") }}
+    </div>
+    <div class="bg-white rounded-lg border">
+        {{ empty_state("No results found", "Try adjusting your search or filters.", icon='<svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>') }}
+    </div>
+</div>
+{% endcall %}
+{% endblock %}

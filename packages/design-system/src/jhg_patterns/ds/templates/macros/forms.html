@@ -1,0 +1,217 @@
+{#
+    Form Macros
+
+    Usage:
+        {% from "macros/forms.html" import input, select, textarea, checkbox, form_group %}
+
+        {{ input("email", label="Email", type="email", required=true) }}
+        {{ select("country", label="Country", options=countries) }}
+        {{ textarea("message", label="Message", rows=4) }}
+        {{ checkbox("agree", label="I agree to the terms") }}
+#}
+
+{% macro input(
+    name,
+    label=none,
+    type="text",
+    value="",
+    placeholder="",
+    required=false,
+    disabled=false,
+    readonly=false,
+    error=none,
+    helper=none,
+    class_=""
+) %}
+<div class="ds-form-group">
+    {%- if label -%}
+    <label for="{{ name }}" class="ds-label">
+        {{ label }}
+        {%- if required %}<span class="text-error">*</span>{% endif -%}
+    </label>
+    {%- endif -%}
+    <input
+        type="{{ type }}"
+        id="{{ name }}"
+        name="{{ name }}"
+        value="{{ value }}"
+        placeholder="{{ placeholder }}"
+        class="ds-input{% if error %} ds-input-error{% endif %} {{ class_ }}"
+        {% if required %}required{% endif %}
+        {% if disabled %}disabled{% endif %}
+        {% if readonly %}readonly{% endif %}
+    >
+    {%- if error -%}
+    <p class="ds-error-text">{{ error }}</p>
+    {%- elif helper -%}
+    <p class="ds-helper-text">{{ helper }}</p>
+    {%- endif -%}
+</div>
+{% endmacro %}
+
+
+{% macro select(
+    name,
+    label=none,
+    options=[],
+    value="",
+    placeholder="Select...",
+    required=false,
+    disabled=false,
+    error=none,
+    helper=none,
+    class_=""
+) %}
+<div class="ds-form-group">
+    {%- if label -%}
+    <label for="{{ name }}" class="ds-label">
+        {{ label }}
+        {%- if required %}<span class="text-error">*</span>{% endif -%}
+    </label>
+    {%- endif -%}
+    <select
+        id="{{ name }}"
+        name="{{ name }}"
+        class="ds-select{% if error %} ds-input-error{% endif %} {{ class_ }}"
+        {% if required %}required{% endif %}
+        {% if disabled %}disabled{% endif %}
+    >
+        {%- if placeholder -%}
+        <option value="" {% if not value %}selected{% endif %}>{{ placeholder }}</option>
+        {%- endif -%}
+        {%- for opt in options -%}
+        {%- if opt is mapping -%}
+        <option value="{{ opt.value }}" {% if opt.value == value %}selected{% endif %}>{{ opt.label }}</option>
+        {%- else -%}
+        <option value="{{ opt }}" {% if opt == value %}selected{% endif %}>{{ opt }}</option>
+        {%- endif -%}
+        {%- endfor -%}
+    </select>
+    {%- if error -%}
+    <p class="ds-error-text">{{ error }}</p>
+    {%- elif helper -%}
+    <p class="ds-helper-text">{{ helper }}</p>
+    {%- endif -%}
+</div>
+{% endmacro %}
+
+
+{% macro textarea(
+    name,
+    label=none,
+    value="",
+    placeholder="",
+    rows=3,
+    required=false,
+    disabled=false,
+    error=none,
+    helper=none,
+    class_=""
+) %}
+<div class="ds-form-group">
+    {%- if label -%}
+    <label for="{{ name }}" class="ds-label">
+        {{ label }}
+        {%- if required %}<span class="text-error">*</span>{% endif -%}
+    </label>
+    {%- endif -%}
+    <textarea
+        id="{{ name }}"
+        name="{{ name }}"
+        rows="{{ rows }}"
+        placeholder="{{ placeholder }}"
+        class="ds-input{% if error %} ds-input-error{% endif %} {{ class_ }}"
+        {% if required %}required{% endif %}
+        {% if disabled %}disabled{% endif %}
+    >{{ value }}</textarea>
+    {%- if error -%}
+    <p class="ds-error-text">{{ error }}</p>
+    {%- elif helper -%}
+    <p class="ds-helper-text">{{ helper }}</p>
+    {%- endif -%}
+</div>
+{% endmacro %}
+
+
+{% macro checkbox(
+    name,
+    label,
+    checked=false,
+    disabled=false,
+    value="1",
+    class_=""
+) %}
+<div class="ds-form-group">
+    <label class="inline-flex items-center gap-2 cursor-pointer {{ class_ }}">
+        <input
+            type="checkbox"
+            id="{{ name }}"
+            name="{{ name }}"
+            value="{{ value }}"
+            class="rounded border-gray-300 text-primary focus:ring-primary"
+            {% if checked %}checked{% endif %}
+            {% if disabled %}disabled{% endif %}
+        >
+        <span class="text-sm text-gray-700">{{ label }}</span>
+    </label>
+</div>
+{% endmacro %}
+
+
+{% macro radio_group(name, label, options, value="", inline=false) %}
+<div class="ds-form-group">
+    {%- if label -%}
+    <label class="ds-label">{{ label }}</label>
+    {%- endif -%}
+    <div class="{% if inline %}flex items-center gap-4{% else %}space-y-2{% endif %} mt-1">
+        {%- for opt in options -%}
+        {%- set opt_value = opt.value if opt is mapping else opt -%}
+        {%- set opt_label = opt.label if opt is mapping else opt -%}
+        <label class="inline-flex items-center gap-2 cursor-pointer">
+            <input
+                type="radio"
+                name="{{ name }}"
+                value="{{ opt_value }}"
+                class="border-gray-300 text-primary focus:ring-primary"
+                {% if opt_value == value %}checked{% endif %}
+            >
+            <span class="text-sm text-gray-700">{{ opt_label }}</span>
+        </label>
+        {%- endfor -%}
+    </div>
+</div>
+{% endmacro %}
+
+
+{% macro form_actions(submit_text="Save", cancel_href=none, cancel_text="Cancel", loading=false) %}
+<div class="flex items-center justify-end gap-3 mt-6">
+    {%- if cancel_href -%}
+    <a href="{{ cancel_href }}" class="ds-btn ds-btn-secondary">{{ cancel_text }}</a>
+    {%- endif -%}
+    <button type="submit" class="ds-btn ds-btn-primary" {% if loading %}disabled{% endif %}>
+        {%- if loading -%}
+        <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        {%- endif -%}
+        {{ submit_text }}
+    </button>
+</div>
+{% endmacro %}
+
+
+{% macro search_input(name="search", placeholder="Search...", value="", class_="") %}
+<div class="relative {{ class_ }}">
+    <input
+        type="search"
+        name="{{ name }}"
+        value="{{ value }}"
+        placeholder="{{ placeholder }}"
+        class="ds-input pl-10"
+    >
+    <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+    </svg>
+</div>
+{% endmacro %}

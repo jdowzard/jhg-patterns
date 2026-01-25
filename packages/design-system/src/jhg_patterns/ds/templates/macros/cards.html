@@ -1,0 +1,101 @@
+{#
+    Card Macros
+
+    Usage:
+        {% from "macros/cards.html" import card, summary_card, stat_card %}
+
+        {% call card(title="My Card") %}
+            Card content here
+        {% endcall %}
+
+        {{ summary_card("Total Revenue", "$125,000", change="+12.5%") }}
+        {{ stat_card("Active Users", 1234, icon=user_icon) }}
+#}
+
+{% macro card(title=none, subtitle=none, footer=none, hoverable=false, class_="") %}
+<div class="ds-card{% if hoverable %} ds-card-hover{% endif %} {{ class_ }}">
+    {%- if title -%}
+    <div class="ds-card-header">
+        <h3 class="text-lg font-semibold text-gray-900">{{ title }}</h3>
+        {%- if subtitle -%}
+        <p class="text-sm text-gray-500 mt-1">{{ subtitle }}</p>
+        {%- endif -%}
+    </div>
+    {%- endif -%}
+    <div class="ds-card-body">
+        {{ caller() }}
+    </div>
+    {%- if footer -%}
+    <div class="ds-card-footer">
+        {{ footer|safe }}
+    </div>
+    {%- endif -%}
+</div>
+{% endmacro %}
+
+
+{% macro summary_card(label, value, change=none, change_positive=none, icon=none, href=none) %}
+{#- Auto-detect positive/negative from change string -#}
+{%- if change and change_positive is none -%}
+    {%- set change_positive = change.startswith("+") or (change|float > 0) -%}
+{%- endif -%}
+
+{%- if href -%}
+<a href="{{ href }}" class="ds-summary-card block hover:shadow-lg transition-shadow">
+{%- else -%}
+<div class="ds-summary-card">
+{%- endif -%}
+    <div class="flex items-start justify-between">
+        <div>
+            <p class="ds-summary-card-label">{{ label }}</p>
+            <p class="ds-summary-card-value">{{ value }}</p>
+            {%- if change -%}
+            <p class="text-sm mt-1 {% if change_positive %}text-success{% else %}text-error{% endif %}">
+                {%- if change_positive -%}
+                <svg class="inline w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
+                {%- else -%}
+                <svg class="inline w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
+                {%- endif -%}
+                {{ change }}
+            </p>
+            {%- endif -%}
+        </div>
+        {%- if icon -%}
+        <div class="p-3 rounded-lg bg-primary-bg text-primary">
+            {{ icon|safe }}
+        </div>
+        {%- endif -%}
+    </div>
+{%- if href -%}
+</a>
+{%- else -%}
+</div>
+{%- endif -%}
+{% endmacro %}
+
+
+{% macro stat_card(label, value, subtitle=none, icon=none, variant="primary") %}
+<div class="ds-card">
+    <div class="ds-card-body flex items-center gap-4">
+        {%- if icon -%}
+        <div class="p-3 rounded-lg bg-{{ variant }}-bg text-{{ variant }}">
+            {{ icon|safe }}
+        </div>
+        {%- endif -%}
+        <div>
+            <p class="text-2xl font-bold text-gray-900">{{ value }}</p>
+            <p class="text-sm text-gray-500">{{ label }}</p>
+            {%- if subtitle -%}
+            <p class="text-xs text-gray-400 mt-1">{{ subtitle }}</p>
+            {%- endif -%}
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+
+{% macro card_grid(columns=3) %}
+<div class="grid grid-cols-1 md:grid-cols-{{ columns }} gap-6">
+    {{ caller() }}
+</div>
+{% endmacro %}

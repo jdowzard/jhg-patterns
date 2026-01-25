@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% from "macros/forms.html" import input, select, textarea, checkbox, radio_group, form_actions, search_input %}
+{% from "macros/alerts.html" import flash_messages %}
+{% from "macros/cards.html" import card %}
+{% from "macros/layout.html" import page_header, section, divider %}
+
+{% block title %}Forms | {{ super() }}{% endblock %}
+
+{% block content %}
+{{ page_header("Form Components", subtitle="Input fields, selects, and form controls") }}
+
+{{ flash_messages() }}
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    {# Basic Form #}
+    {% call card(title="Contact Form", subtitle="Example form with validation") %}
+    <form method="POST">
+        {{ input("name", label="Full Name", placeholder="Enter your name", required=true) }}
+        {{ input("email", label="Email Address", type="email", placeholder="you@example.com", required=true, helper="We'll never share your email.") }}
+        {{ input("phone", label="Phone Number", type="tel", placeholder="+61 400 000 000") }}
+
+        {{ select("department", label="Department", options=[
+            {"value": "sales", "label": "Sales"},
+            {"value": "support", "label": "Support"},
+            {"value": "engineering", "label": "Engineering"},
+            {"value": "other", "label": "Other"}
+        ], required=true) }}
+
+        {{ textarea("message", label="Message", placeholder="How can we help you?", rows=4, required=true) }}
+
+        {{ checkbox("newsletter", label="Subscribe to our newsletter") }}
+        {{ checkbox("terms", label="I agree to the terms and conditions", checked=true) }}
+
+        {{ form_actions(submit_text="Send Message", cancel_href="/") }}
+    </form>
+    {% endcall %}
+
+    {# Form States #}
+    {% call card(title="Input States", subtitle="Various form field states") %}
+    <div class="space-y-6">
+        {{ input("normal", label="Normal Input", placeholder="Normal state") }}
+        {{ input("disabled", label="Disabled Input", placeholder="Disabled", disabled=true, value="Cannot edit") }}
+        {{ input("readonly", label="Readonly Input", value="Read only value", readonly=true) }}
+        {{ input("error", label="Input with Error", value="Invalid value", error="This field contains an error") }}
+        {{ input("helper", label="Input with Helper", placeholder="Enter something", helper="This is helper text to guide the user") }}
+    </div>
+    {% endcall %}
+</div>
+
+{{ divider() }}
+
+{% call section(title="Radio Buttons & Checkboxes", description="Selection controls") %}
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+    <div class="bg-white p-6 rounded-lg border">
+        {{ radio_group("plan", "Select a Plan", options=[
+            {"value": "free", "label": "Free - $0/month"},
+            {"value": "pro", "label": "Pro - $29/month"},
+            {"value": "enterprise", "label": "Enterprise - Contact us"}
+        ], value="pro") }}
+    </div>
+    <div class="bg-white p-6 rounded-lg border">
+        {{ radio_group("frequency", "Billing Frequency", options=[
+            {"value": "monthly", "label": "Monthly"},
+            {"value": "yearly", "label": "Yearly (Save 20%)"}
+        ], inline=true, value="monthly") }}
+    </div>
+</div>
+{% endcall %}
+
+{{ divider() }}
+
+{% call section(title="Search", description="Search input variations") %}
+<div class="max-w-md space-y-4">
+    {{ search_input(placeholder="Search users...") }}
+    {{ search_input(name="query", placeholder="Search products...", value="laptop") }}
+</div>
+{% endcall %}
+{% endblock %}

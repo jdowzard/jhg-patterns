@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% from "macros/tables.html" import simple_table, data_table, pagination %}
+{% from "macros/badges.html" import status_badge %}
+{% from "macros/buttons.html" import button, icon_button %}
+{% from "macros/modals.html" import confirm_modal, modal_trigger %}
+{% from "macros/forms.html" import search_input %}
+{% from "macros/alerts.html" import flash_messages %}
+{% from "macros/cards.html" import card %}
+{% from "macros/layout.html" import page_header, section, divider %}
+
+{% block title %}Tables | {{ super() }}{% endblock %}
+
+{% block content %}
+{{ page_header(
+    "Data Tables",
+    subtitle="Display and manage tabular data",
+    actions='<a href="#" class="ds-btn ds-btn-primary">Add User</a>'
+) }}
+
+{{ flash_messages() }}
+
+{# Search and Filters #}
+<div class="mb-6 flex items-center gap-4">
+    {{ search_input(placeholder="Search users...", class_="w-64") }}
+    <select class="ds-select w-48">
+        <option value="">All Statuses</option>
+        <option value="active">Active</option>
+        <option value="inactive">Inactive</option>
+        <option value="pending">Pending</option>
+    </select>
+</div>
+
+{# Simple Table #}
+{% call section(title="Users Table", description="Paginated user list with actions") %}
+{% call simple_table(headers=["Name", "Email", "Role", "Status", "Actions"]) %}
+{% for user in users %}
+<tr>
+    <td>
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-full bg-primary-bg flex items-center justify-center text-primary text-sm font-semibold">
+                {{ user.name[0] }}
+            </div>
+            <span class="font-medium">{{ user.name }}</span>
+        </div>
+    </td>
+    <td>{{ user.email }}</td>
+    <td>{{ user.role }}</td>
+    <td>{{ status_badge(user.status, status=user.status) }}</td>
+    <td>
+        <div class="flex items-center gap-2">
+            {{ button("View", variant="outline", size="sm", href="/users/" ~ user.id) }}
+            <button
+                type="button"
+                class="ds-btn ds-btn-ghost ds-btn-sm text-error"
+                @click="$dispatch('open-delete-user-{{ user.id }}')"
+            >
+                Delete
+            </button>
+        </div>
+    </td>
+</tr>
+{{ confirm_modal("delete-user-" ~ user.id, title="Delete User", message="Are you sure you want to delete " ~ user.name ~ "? This action cannot be undone.", action="/users/" ~ user.id ~ "/delete", confirm_text="Delete", variant="danger") }}
+{% endfor %}
+{% endcall %}
+
+{{ pagination(page, total_pages, "/tables") }}
+{% endcall %}
+
+{{ divider() }}
+
+{# Data Table (Alternative) #}
+{% call section(title="Full Data Table", description="All users without pagination") %}
+<div class="overflow-hidden">
+    {{ data_table(
+        rows=all_users,
+        columns=[
+            {"key": "name", "label": "Name"},
+            {"key": "email", "label": "Email"},
+            {"key": "role", "label": "Role"},
+            {"key": "status", "label": "Status"}
+        ],
+        empty_message="No users found",
+        sortable=true
+    ) }}
+</div>
+{% endcall %}
+{% endblock %}

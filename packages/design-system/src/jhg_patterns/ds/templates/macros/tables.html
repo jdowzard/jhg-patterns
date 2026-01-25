@@ -1,0 +1,161 @@
+{#
+    Table Macros
+
+    Usage:
+        {% from "macros/tables.html" import data_table, simple_table %}
+
+        {{ data_table(rows, columns=["Name", "Email", "Status"]) }}
+
+        {% call simple_table(headers=["Name", "Email"]) %}
+            <tr>
+                <td>John</td>
+                <td>john@example.com</td>
+            </tr>
+        {% endcall %}
+#}
+
+{% macro simple_table(headers=[], sortable=false, class_="") %}
+<div class="ds-table-container {{ class_ }}">
+    <table class="ds-table{% if sortable %} ds-table-sortable{% endif %}">
+        {%- if headers -%}
+        <thead>
+            <tr>
+                {%- for header in headers -%}
+                <th>{{ header }}</th>
+                {%- endfor -%}
+            </tr>
+        </thead>
+        {%- endif -%}
+        <tbody>
+            {{ caller() }}
+        </tbody>
+    </table>
+</div>
+{% endmacro %}
+
+
+{% macro data_table(
+    rows,
+    columns=[],
+    row_key="id",
+    empty_message="No data available",
+    sortable=false,
+    selectable=false,
+    actions=none,
+    class_=""
+) %}
+<div class="ds-table-container {{ class_ }}">
+    <table class="ds-table{% if sortable %} ds-table-sortable{% endif %}"{% if selectable %} x-data="{ selected: [] }"{% endif %}>
+        <thead>
+            <tr>
+                {%- if selectable -%}
+                <th class="w-12">
+                    <input type="checkbox" @change="selected = $event.target.checked ? {{ rows|map(attribute=row_key)|list|tojson }} : []" class="rounded border-gray-300">
+                </th>
+                {%- endif -%}
+                {%- for col in columns -%}
+                {%- set col_name = col.key if col is mapping else col -%}
+                {%- set col_label = col.label if col is mapping else col|title -%}
+                {%- set col_sortable = col.sortable if col is mapping else sortable -%}
+                <th{% if col_sortable %} @click="$dispatch('sort', '{{ col_name }}')"{% endif %}>
+                    {{ col_label }}
+                    {%- if col_sortable -%}
+                    <svg class="inline w-4 h-4 ml-1 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path></svg>
+                    {%- endif -%}
+                </th>
+                {%- endfor -%}
+                {%- if actions -%}
+                <th class="w-24 text-right">Actions</th>
+                {%- endif -%}
+            </tr>
+        </thead>
+        <tbody>
+            {%- if rows -%}
+            {%- for row in rows -%}
+            <tr>
+                {%- if selectable -%}
+                <td>
+                    <input type="checkbox" :value="{{ row[row_key]|tojson }}" x-model="selected" class="rounded border-gray-300">
+                </td>
+                {%- endif -%}
+                {%- for col in columns -%}
+                {%- set col_key = col.key if col is mapping else col -%}
+                {%- set col_render = col.render if col is mapping else none -%}
+                <td>
+                    {%- if col_render -%}
+                    {{ col_render(row)|safe }}
+                    {%- else -%}
+                    {{ row.get(col_key, "") if row is mapping else row[loop.index0] }}
+                    {%- endif -%}
+                </td>
+                {%- endfor -%}
+                {%- if actions -%}
+                <td class="text-right">
+                    <div class="flex items-center justify-end gap-2">
+                        {%- for action in actions -%}
+                        {%- set href = action.href.format(**row) if action.href else none -%}
+                        <a href="{{ href }}" class="text-gray-400 hover:text-gray-600" title="{{ action.label }}">
+                            {{ action.icon|safe if action.icon else action.label }}
+                        </a>
+                        {%- endfor -%}
+                    </div>
+                </td>
+                {%- endif -%}
+            </tr>
+            {%- endfor -%}
+            {%- else -%}
+            <tr>
+                <td colspan="{{ (columns|length) + (1 if selectable else 0) + (1 if actions else 0) }}" class="text-center py-8 text-gray-500">
+                    {{ empty_message }}
+                </td>
+            </tr>
+            {%- endif -%}
+        </tbody>
+    </table>
+</div>
+{% endmacro %}
+
+
+{% macro pagination(page, total_pages, base_url, query_param="page") %}
+{%- if total_pages > 1 -%}
+<nav class="flex items-center justify-between mt-4" aria-label="Pagination">
+    <div class="text-sm text-gray-500">
+        Page {{ page }} of {{ total_pages }}
+    </div>
+    <div class="flex items-center gap-1">
+        {#- Previous -#}
+        {%- if page > 1 -%}
+        <a href="{{ base_url }}?{{ query_param }}={{ page - 1 }}" class="ds-btn ds-btn-outline ds-btn-sm">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+        </a>
+        {%- else -%}
+        <span class="ds-btn ds-btn-outline ds-btn-sm opacity-50 cursor-not-allowed">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+        </span>
+        {%- endif -%}
+
+        {#- Page numbers -#}
+        {%- for p in range(1, total_pages + 1) -%}
+        {%- if p == page -%}
+        <span class="ds-btn ds-btn-primary ds-btn-sm">{{ p }}</span>
+        {%- elif p == 1 or p == total_pages or (p >= page - 1 and p <= page + 1) -%}
+        <a href="{{ base_url }}?{{ query_param }}={{ p }}" class="ds-btn ds-btn-outline ds-btn-sm">{{ p }}</a>
+        {%- elif p == page - 2 or p == page + 2 -%}
+        <span class="px-2 text-gray-400">...</span>
+        {%- endif -%}
+        {%- endfor -%}
+
+        {#- Next -#}
+        {%- if page < total_pages -%}
+        <a href="{{ base_url }}?{{ query_param }}={{ page + 1 }}" class="ds-btn ds-btn-outline ds-btn-sm">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+        </a>
+        {%- else -%}
+        <span class="ds-btn ds-btn-outline ds-btn-sm opacity-50 cursor-not-allowed">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+        </span>
+        {%- endif -%}
+    </div>
+</nav>
+{%- endif -%}
+{% endmacro %}

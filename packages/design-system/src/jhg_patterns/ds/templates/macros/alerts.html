@@ -1,0 +1,72 @@
+{#
+    Alert Macros
+
+    Usage:
+        {% from "macros/alerts.html" import alert, flash_messages %}
+
+        {{ alert("Success!", "Your changes have been saved.", variant="success") }}
+        {{ alert("Warning", "This action cannot be undone.", variant="warning", dismissible=true) }}
+        {{ flash_messages() }}
+#}
+
+{% macro alert(title, message=none, variant="info", dismissible=false, icon=true) %}
+{%- set icons = {
+    "success": '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>',
+    "error": '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>',
+    "warning": '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>',
+    "info": '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>',
+} -%}
+
+<div class="ds-alert ds-alert-{{ variant }}"{% if dismissible %} x-data="{ show: true }" x-show="show" x-transition{% endif %}>
+    {%- if icon -%}
+    <div class="flex-shrink-0">{{ icons.get(variant, icons.info)|safe }}</div>
+    {%- endif -%}
+    <div class="flex-1">
+        {%- if title -%}
+        <p class="font-medium">{{ title }}</p>
+        {%- endif -%}
+        {%- if message -%}
+        <p class="{% if title %}mt-1{% endif %} text-sm opacity-90">{{ message }}</p>
+        {%- endif -%}
+    </div>
+    {%- if dismissible -%}
+    <button type="button" @click="show = false" class="flex-shrink-0 ml-2 opacity-50 hover:opacity-100">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+    </button>
+    {%- endif -%}
+</div>
+{% endmacro %}
+
+
+{% macro flash_messages() %}
+{#- Render Flask flash messages -#}
+{%- with messages = get_flashed_messages(with_categories=true) -%}
+{%- if messages -%}
+<div class="space-y-2 mb-4">
+    {%- for category, message in messages -%}
+    {%- set variant = {"message": "info", "error": "error", "warning": "warning", "success": "success"}.get(category, category) -%}
+    {{ alert(none, message, variant=variant, dismissible=true) }}
+    {%- endfor -%}
+</div>
+{%- endif -%}
+{%- endwith -%}
+{% endmacro %}
+
+
+{% macro banner(message, variant="info", action_text=none, action_href=none, dismissible=false) %}
+<div class="bg-{{ variant }}-bg border-l-4 border-{{ variant }} p-4"{% if dismissible %} x-data="{ show: true }" x-show="show" x-transition{% endif %}>
+    <div class="flex items-center justify-between">
+        <p class="text-{{ variant }}-dark">{{ message }}</p>
+        <div class="flex items-center gap-4">
+            {%- if action_text and action_href -%}
+            <a href="{{ action_href }}" class="text-{{ variant }}-dark font-medium hover:underline">{{ action_text }}</a>
+            {%- endif -%}
+            {%- if dismissible -%}
+            <button type="button" @click="show = false" class="text-{{ variant }}-dark opacity-50 hover:opacity-100">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+            {%- endif -%}
+        </div>
+    </div>
+</div>
+{% endmacro %}

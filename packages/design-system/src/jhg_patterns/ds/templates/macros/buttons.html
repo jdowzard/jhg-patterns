@@ -1,0 +1,79 @@
+{#
+    Button Macros
+
+    Usage:
+        {% from "macros/buttons.html" import button, button_group, icon_button %}
+
+        {{ button("Save", variant="primary") }}
+        {{ button("Cancel", variant="secondary", href="/cancel") }}
+        {{ button("Delete", variant="danger", disabled=true) }}
+#}
+
+{% macro button(
+    text,
+    variant="primary",
+    size="md",
+    href=none,
+    type="button",
+    disabled=false,
+    loading=false,
+    icon=none,
+    icon_position="left",
+    class_=""
+) %}
+{%- set size_class = {"sm": "ds-btn-sm", "md": "", "lg": "ds-btn-lg"}.get(size, "") -%}
+{%- set variant_class = "ds-btn-" ~ variant -%}
+{%- set classes = ["ds-btn", variant_class, size_class, class_]|reject("equalto", "")|join(" ") -%}
+
+{%- if href -%}
+<a href="{{ href }}" class="{{ classes }}"{% if disabled %} aria-disabled="true" tabindex="-1"{% endif %}>
+{%- else -%}
+<button type="{{ type }}" class="{{ classes }}"{% if disabled %} disabled{% endif %}>
+{%- endif -%}
+
+{%- if loading -%}
+<svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+</svg>
+{%- elif icon and icon_position == "left" -%}
+{{ icon|safe }}
+{%- endif -%}
+
+<span>{{ text }}</span>
+
+{%- if icon and icon_position == "right" and not loading -%}
+{{ icon|safe }}
+{%- endif -%}
+
+{%- if href -%}
+</a>
+{%- else -%}
+</button>
+{%- endif -%}
+{% endmacro %}
+
+
+{% macro button_group(buttons, size="md") %}
+<div class="ds-btn-group" role="group">
+    {%- for btn in buttons -%}
+    {{ button(btn.text, variant=btn.get("variant", "outline"), size=size, href=btn.get("href"), disabled=btn.get("disabled", false)) }}
+    {%- endfor -%}
+</div>
+{% endmacro %}
+
+
+{% macro icon_button(icon, label, variant="ghost", size="md", href=none, disabled=false) %}
+{%- set size_class = {"sm": "ds-btn-sm", "md": "", "lg": "ds-btn-lg"}.get(size, "") -%}
+{%- set classes = ["ds-btn", "ds-btn-" ~ variant, size_class, "ds-btn-icon"]|reject("equalto", "")|join(" ") -%}
+
+{%- if href -%}
+<a href="{{ href }}" class="{{ classes }}" aria-label="{{ label }}" title="{{ label }}"{% if disabled %} aria-disabled="true" tabindex="-1"{% endif %}>
+    {{ icon|safe }}
+</a>
+{%- else -%}
+<button type="button" class="{{ classes }}" aria-label="{{ label }}" title="{{ label }}"{% if disabled %} disabled{% endif %}>
+    {{ icon|safe }}
+</button>
+{%- endif -%}
+{% endmacro %}
