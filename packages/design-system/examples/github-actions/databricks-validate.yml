@@ -1,0 +1,52 @@
+name: Validate Databricks Bundle
+
+# Trigger on pull requests that modify Databricks configuration or notebooks
+on:
+  pull_request:
+    paths:
+      - 'databricks.yml'
+      - 'notebooks/**'
+      - 'resources/**'
+      - '.github/workflows/databricks-validate.yml'
+  # Also allow manual trigger for testing
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Check out the repository code
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Install and set up Databricks CLI
+      - name: Set up Databricks CLI
+        uses: databricks/setup-cli@main
+
+      # Validate the Databricks Asset Bundle configuration
+      # This checks for syntax errors, missing resources, and configuration issues
+      - name: Validate Databricks Bundle
+        run: databricks bundle validate
+        env:
+          # Set Databricks workspace host URL (stored in repository secrets)
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+          # Set Databricks authentication token (stored in repository secrets)
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+
+      # Optional: Show bundle configuration for debugging
+      - name: Show Bundle Configuration
+        run: databricks bundle show
+        env:
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+        if: always()
+
+# Notes for setup:
+# 1. Create a GitHub Actions secret DATABRICKS_HOST with your workspace URL
+#    Example: https://your-workspace.cloud.databricks.com
+# 2. Create a GitHub Actions secret DATABRICKS_TOKEN with a Databricks PAT token
+# 3. Ensure your repository root contains a databricks.yml file
+# 4. Place this file in .github/workflows/databricks-validate.yml in your repo
