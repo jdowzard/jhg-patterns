@@ -24,12 +24,13 @@ security:
   cors_origins: "*"
 
 # Databricks connection (values from environment if not set)
+# Set these environment variables:
+#   DATABRICKS_HOST=adb-xxx.azuredatabricks.net
+#   DATABRICKS_TOKEN=dapi...
+#   DATABRICKS_SQL_PATH=/sql/1.0/warehouses/xxx
 databricks:
-  # host: "adb-xxx.azuredatabricks.net"  # or DATABRICKS_HOST env var
-  # token: "dapi..."                      # or DATABRICKS_TOKEN env var
-  # sql_path: "/sql/1.0/warehouses/xxx"   # or DATABRICKS_SQL_PATH env var
-  catalog: "main"
-  schema: "default"
+  catalog: "ai_a"
+  schema: "ds_template"
 
 # Feature flags
 enable_health_check: true
