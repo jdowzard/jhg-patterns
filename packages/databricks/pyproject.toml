@@ -1,0 +1,21 @@
+[project]
+name = "jhg-patterns-databricks"
+version = "0.1.0"
+description = "Databricks patterns: Unity Catalog helpers, Delta table utilities, SQL connector wrappers"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "James Dowzard", email = "james.dowzard@jhg.com.au" }]
+dependencies = []
+
+[project.optional-dependencies]
+sql = ["databricks-sql-connector>=2.0"]
+sdk = ["databricks-sdk>=0.20"]
+all = ["databricks-sql-connector>=2.0", "databricks-sdk>=0.20"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/jhg_patterns"]
