@@ -10,6 +10,15 @@ Run with:
     # Run app
     cd examples/demo_app
     uv run flask run --debug
+
+This demo showcases:
+- Theme system and Jinja2 macros
+- Databricks connector, audit logging, and TTL cache
+- API response helpers (api_success, api_error)
+- Retry patterns with exponential backoff
+- Pydantic-based configuration management
+- Custom logging with color-coded output
+- Authentication patterns (Databricks Apps)
 """
 
 import os
@@ -17,12 +26,29 @@ from pathlib import Path
 from flask import render_template, request, flash, redirect, url_for, g
 
 import yaml
-from jhg_patterns.ds import create_app
+from jhg_patterns.ds import create_app, init_auth, login_required, get_current_user
 from jhg_patterns.ds.databricks import TTLCache
+from jhg_patterns.ds.api import api_success, api_error, register_api_error_handlers
+from jhg_patterns.ds.retry import with_retry, DATABRICKS_RETRY
+from jhg_patterns.ds.config import AppSettings, load_config
+from jhg_patterns.ds.logging import get_logger, configure_flask_logging
 
+# =============================================================================
+# APP INITIALIZATION
+# =============================================================================
 # Load app from YAML config
 config_path = Path(__file__).parent / "config.yaml"
 app = create_app(str(config_path))
+
+# Configure logging with JHG formatter (color-coded levels)
+logger = get_logger(__name__, level="DEBUG")
+configure_flask_logging(app, level="INFO")
+
+# Register standardized JSON error handlers for API routes
+register_api_error_handlers(app)
+
+# Initialize authentication (works in Databricks Apps and locally)
+init_auth(app)
 
 # =============================================================================
 # TTL CACHE SETUP
@@ -58,7 +84,13 @@ app.cache = cache
 # The design system provides utilities for Databricks. Here's how to use them:
 
 def get_db():
-    """Get Databricks connector (cached per request)."""
+    """Get Databricks connector (cached per request).
+
+    Uses the DatabricksConfig class which loads from environment variables:
+    - DATABRICKS_HOST
+    - DATABRICKS_TOKEN
+    - DATABRICKS_SQL_PATH
+    """
     if "db" not in g:
         try:
             from jhg_patterns.ds.databricks import DatabricksConnector, DatabricksConfig
@@ -71,11 +103,24 @@ def get_db():
             )
             if config.host and config.token:
                 g.db = DatabricksConnector(config)
+                logger.info("Databricks connector initialized")
             else:
                 g.db = None
+                logger.debug("Databricks not configured (missing credentials)")
         except ImportError:
             g.db = None
+            logger.warning("Databricks SDK not installed")
     return g.db
+
+
+@DATABRICKS_RETRY
+def query_with_retry(db, sql: str, params: dict = None):
+    """Execute a query with automatic retry on transient failures.
+
+    Uses the DATABRICKS_RETRY decorator which retries up to 3 times
+    with exponential backoff (1s, 2s, 4s) on connection errors.
+    """
+    return db.query(sql, params)
 
 
 def get_audit():
@@ -314,9 +359,8 @@ def api_feature_flags():
     API endpoint to list feature flags from Databricks.
 
     Cached with 'dashboard_' prefix (300s TTL).
+    Uses api_success/api_error for standardized JSON responses.
     """
-    from flask import jsonify
-
     def _load_flags():
         db = get_db()
         if not db:
@@ -327,9 +371,9 @@ def api_feature_flags():
     flags = cache.get("dashboard_feature_flags_all", loader=_load_flags)
 
     if flags is None:
-        return jsonify({"error": "Databricks not configured"}), 503
+        return api_error("Databricks not configured", status=503)
 
-    return jsonify(flags)
+    return api_success(flags, message="Feature flags retrieved")
 
 
 @app.route("/api/config")
@@ -338,9 +382,8 @@ def api_config():
     API endpoint to list app config from Databricks.
 
     Cached with default TTL (600s).
+    Uses api_success/api_error for standardized JSON responses.
     """
-    from flask import jsonify
-
     def _load_config():
         db = get_db()
         if not db:
@@ -353,9 +396,9 @@ def api_config():
     config = cache.get("config_all", loader=_load_config)
 
     if config is None:
-        return jsonify({"error": "Databricks not configured"}), 503
+        return api_error("Databricks not configured", status=503)
 
-    return jsonify(config)
+    return api_success(config, message="Configuration retrieved")
 
 
 @app.route("/api/cache/stats")
@@ -364,15 +407,14 @@ def api_cache_stats():
     API endpoint to view cache statistics.
 
     Shows active entries, hit/miss info, and TTL configuration.
+    Uses api_success for standardized JSON response.
     """
-    from flask import jsonify
-
     stats = cache.stats()
     stats["ttl_config"] = {
         "default": cache_config.get("default_ttl", 600),
         "per_prefix": cache_config.get("ttls", {}),
     }
-    return jsonify(stats)
+    return api_success(stats)
 
 
 @app.route("/api/cache/invalidate/<key>", methods=["POST"])
@@ -382,15 +424,34 @@ def api_cache_invalidate(key):
 
     POST /api/cache/invalidate/dashboard_stats -> invalidates dashboard_stats
     POST /api/cache/invalidate/dashboard_* -> invalidates all dashboard_* keys
+    Uses api_success for standardized JSON response.
     """
-    from flask import jsonify
-
     if key.endswith("*"):
         cache.invalidate_pattern(key)
-        return jsonify({"invalidated": key, "type": "pattern"})
+        return api_success({"invalidated": key, "type": "pattern"}, message="Cache invalidated")
     else:
         cache.invalidate(key)
-        return jsonify({"invalidated": key, "type": "single"})
+        return api_success({"invalidated": key, "type": "single"}, message="Cache key invalidated")
+
+
+# =============================================================================
+# AUTHENTICATION DEMO ROUTES
+# =============================================================================
+
+@app.route("/api/me")
+@login_required
+def api_current_user():
+    """
+    API endpoint to get current authenticated user.
+
+    In Databricks Apps, returns the user from X-Forwarded-Preferred-Username header.
+    Locally with SDK, returns the identity from the Databricks SDK.
+    Uses api_success for standardized JSON response.
+    """
+    user = get_current_user()
+    if user:
+        return api_success({"user": user}, message="User authenticated")
+    return api_error("User not found", status=404)
 
 
 if __name__ == "__main__":

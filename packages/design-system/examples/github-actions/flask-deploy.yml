@@ -1,0 +1,154 @@
+name: Deploy Flask App to Databricks Apps
+
+# Trigger on push to main branch and manual trigger
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'src/**'
+      - 'requirements.txt'
+      - 'pyproject.toml'
+      - '.github/workflows/flask-deploy.yml'
+  # Allow manual trigger for deployments
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Check out the repository code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Set up Python environment
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # Install uv package manager
+      - name: Install uv package manager
+        run: pip install uv
+
+      # Install project dependencies
+      - name: Install dependencies
+        run: uv sync
+
+      # Run tests before deployment
+      - name: Run tests
+        run: uv run pytest
+
+  deploy:
+    # Only deploy if tests pass
+    needs: test
+    runs-on: ubuntu-latest
+    # Only deploy on main branch pushes
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      # Check out the repository code
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Set up Python environment
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # Install Databricks CLI
+      - name: Set up Databricks CLI
+        uses: databricks/setup-cli@main
+
+      # Install uv package manager
+      - name: Install uv package manager
+        run: pip install uv
+
+      # Install project dependencies
+      - name: Install dependencies
+        run: uv sync
+
+      # Validate the bundle before deployment
+      - name: Validate Databricks Bundle
+        run: databricks bundle validate
+        env:
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+
+      # Deploy the Flask app to Databricks Apps
+      # This deploys the bundle defined in databricks.yml
+      - name: Deploy to Databricks Apps
+        run: databricks bundle deploy --force
+        env:
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+
+      # Get the deployed app URL
+      - name: Get app deployment status
+        run: |
+          databricks apps list --all
+          echo "Deployment completed. Check Databricks Apps for your Flask application."
+        env:
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+        if: always()
+
+      # Create deployment summary
+      - name: Deployment Summary
+        run: echo "✓ Flask app successfully deployed to Databricks Apps"
+        if: success()
+
+      # Notify on deployment failure
+      - name: Deployment Failed
+        run: echo "✗ Deployment failed. Check logs above for details."
+        if: failure()
+
+# Notes for setup:
+#
+# Prerequisites:
+# 1. Create GitHub Actions secrets:
+#    - DATABRICKS_HOST: Your Databricks workspace URL (https://your-workspace.cloud.databricks.com)
+#    - DATABRICKS_TOKEN: A Databricks PAT token with appropriate permissions
+#
+# Flask App Structure:
+# Your repository should include:
+# - src/main.py or app.py: Flask application entry point
+# - requirements.txt or pyproject.toml: Python dependencies
+# - databricks.yml: Databricks Asset Bundle configuration
+#
+# Example databricks.yml for Flask app deployment:
+# ---
+# bundle:
+#   name: my-flask-app
+#   version: 1.0.0
+#
+# resources:
+#   apps:
+#     my_app:
+#       name: My Flask App
+#       source_code_path: ./src
+#       config:
+#         command:
+#           - python
+#           - main.py
+#
+# 2. Ensure Flask app listens on port 8000 (Databricks Apps requirement)
+#    Example: app.run(host='0.0.0.0', port=8000)
+#
+# 3. Place this file in .github/workflows/flask-deploy.yml in your repo
+#
+# 4. Configure testing in pyproject.toml:
+#    [tool.pytest.ini_options]
+#    testpaths = ["tests"]
+#    addopts = "-v"
+#
+# Deployment Flow:
+# 1. Code is pushed to main branch
+# 2. Tests run in parallel
+# 3. If tests pass, bundle is validated
+# 4. Bundle is deployed to Databricks workspace
+# 5. Application becomes available in Databricks Apps
