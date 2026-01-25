@@ -1,0 +1,131 @@
+{#
+    Layout Macros
+
+    Usage:
+        {% from "macros/layout.html" import page_header, breadcrumb, empty_state %}
+
+        {{ page_header("Dashboard", subtitle="Overview of your data") }}
+        {{ breadcrumb([("Home", "/"), ("Users", "/users"), ("Edit", none)]) }}
+        {{ empty_state("No data", "Start by adding your first item.") }}
+#}
+
+{% macro page_header(title, subtitle=none, actions=none) %}
+<div class="flex items-start justify-between mb-6">
+    <div>
+        <h1 class="text-2xl font-bold text-gray-900">{{ title }}</h1>
+        {%- if subtitle -%}
+        <p class="mt-1 text-sm text-gray-500">{{ subtitle }}</p>
+        {%- endif -%}
+    </div>
+    {%- if actions -%}
+    <div class="flex items-center gap-3">
+        {{ actions|safe }}
+    </div>
+    {%- endif -%}
+</div>
+{% endmacro %}
+
+
+{% macro breadcrumb(items) %}
+<nav class="mb-4" aria-label="Breadcrumb">
+    <ol class="flex items-center space-x-2 text-sm text-gray-500">
+        {%- for item in items -%}
+        {%- set label = item[0] if item is iterable and item is not string else item -%}
+        {%- set href = item[1] if item is iterable and item is not string and item|length > 1 else none -%}
+        <li class="flex items-center">
+            {%- if not loop.first -%}
+            <svg class="w-4 h-4 mx-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+            {%- endif -%}
+            {%- if href -%}
+            <a href="{{ href }}" class="hover:text-gray-700">{{ label }}</a>
+            {%- else -%}
+            <span class="text-gray-900 font-medium">{{ label }}</span>
+            {%- endif -%}
+        </li>
+        {%- endfor -%}
+    </ol>
+</nav>
+{% endmacro %}
+
+
+{% macro empty_state(title, description=none, action_text=none, action_href=none, icon=none) %}
+<div class="ds-empty-state">
+    {%- if icon -%}
+    <div class="ds-empty-state-icon">{{ icon|safe }}</div>
+    {%- else -%}
+    <div class="ds-empty-state-icon">
+        <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+        </svg>
+    </div>
+    {%- endif -%}
+    <h3 class="ds-empty-state-title">{{ title }}</h3>
+    {%- if description -%}
+    <p class="ds-empty-state-description">{{ description }}</p>
+    {%- endif -%}
+    {%- if action_text and action_href -%}
+    <a href="{{ action_href }}" class="ds-btn ds-btn-primary">{{ action_text }}</a>
+    {%- endif -%}
+</div>
+{% endmacro %}
+
+
+{% macro section(title=none, description=none, class_="") %}
+<section class="mb-8 {{ class_ }}">
+    {%- if title -%}
+    <div class="mb-4">
+        <h2 class="text-lg font-semibold text-gray-900">{{ title }}</h2>
+        {%- if description -%}
+        <p class="text-sm text-gray-500">{{ description }}</p>
+        {%- endif -%}
+    </div>
+    {%- endif -%}
+    {{ caller() }}
+</section>
+{% endmacro %}
+
+
+{% macro divider(text=none) %}
+{%- if text -%}
+<div class="relative my-6">
+    <div class="absolute inset-0 flex items-center">
+        <div class="w-full border-t border-gray-200"></div>
+    </div>
+    <div class="relative flex justify-center text-sm">
+        <span class="px-4 bg-white text-gray-500">{{ text }}</span>
+    </div>
+</div>
+{%- else -%}
+<hr class="my-6 border-gray-200">
+{%- endif -%}
+{% endmacro %}
+
+
+{% macro loading_spinner(size="md", class_="") %}
+{%- set size_class = {"sm": "w-4 h-4", "md": "w-8 h-8", "lg": "w-12 h-12"}.get(size, "w-8 h-8") -%}
+<div class="flex items-center justify-center {{ class_ }}">
+    <svg class="animate-spin {{ size_class }} text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+    </svg>
+</div>
+{% endmacro %}
+
+
+{% macro progress_bar(value, max=100, variant="primary", show_label=false, size="md") %}
+{%- set percent = (value / max * 100)|int -%}
+{%- set height = {"sm": "h-1", "md": "h-2", "lg": "h-4"}.get(size, "h-2") -%}
+<div>
+    {%- if show_label -%}
+    <div class="flex justify-between text-sm text-gray-600 mb-1">
+        <span>Progress</span>
+        <span>{{ percent }}%</span>
+    </div>
+    {%- endif -%}
+    <div class="ds-progress {{ height }}">
+        <div class="ds-progress-bar ds-progress-{{ variant }}" style="width: {{ percent }}%"></div>
+    </div>
+</div>
+{% endmacro %}

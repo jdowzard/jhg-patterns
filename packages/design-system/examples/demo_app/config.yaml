@@ -1,0 +1,41 @@
+# Application Configuration
+# This file configures the Flask app with JHG Design System
+
+name: "JHG Design System Demo"
+
+# Theme configuration (can be inline or path to theme file)
+theme: "theme.yaml"
+
+# Cache settings
+cache:
+  enabled: true
+  default_ttl: 600  # seconds
+  ttls:
+    dashboard_: 300   # Dashboard queries cached for 5 minutes
+    users_: 120       # User queries cached for 2 minutes
+    reports_: 1800    # Reports cached for 30 minutes
+
+# Security settings
+security:
+  csrf_enabled: true
+  rate_limiting_enabled: true
+  rate_limit_default: "200 per day, 50 per hour"
+  cors_enabled: true
+  cors_origins: "*"
+
+# Databricks connection (values from environment if not set)
+databricks:
+  # host: "adb-xxx.azuredatabricks.net"  # or DATABRICKS_HOST env var
+  # token: "dapi..."                      # or DATABRICKS_TOKEN env var
+  # sql_path: "/sql/1.0/warehouses/xxx"   # or DATABRICKS_SQL_PATH env var
+  catalog: "main"
+  schema: "default"
+
+# Feature flags
+enable_health_check: true
+enable_cache_api: true
+enable_error_pages: true
+
+# Flask settings
+debug: true
+# secret_key: "..."  # or FLASK_SECRET_KEY env var (auto-generated if not set)

@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% from "macros/badges.html" import status_badge %}
+{% from "macros/buttons.html" import button %}
+{% from "macros/cards.html" import card %}
+{% from "macros/layout.html" import page_header, breadcrumb %}
+
+{% block title %}{{ user.name }} | {{ super() }}{% endblock %}
+
+{% block content %}
+{{ breadcrumb([("Dashboard", "/"), ("Tables", "/tables"), (user.name, none)]) }}
+
+{{ page_header(
+    user.name,
+    subtitle=user.email,
+    actions=button("Edit", variant="outline", href="#") ~ button("Delete", variant="danger", href="/users/" ~ user.id ~ "/delete")
+) }}
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    {# User Info Card #}
+    {% call card(title="User Information") %}
+    <dl class="space-y-4">
+        <div>
+            <dt class="text-sm text-gray-500">Full Name</dt>
+            <dd class="font-medium">{{ user.name }}</dd>
+        </div>
+        <div>
+            <dt class="text-sm text-gray-500">Email Address</dt>
+            <dd class="font-medium">{{ user.email }}</dd>
+        </div>
+        <div>
+            <dt class="text-sm text-gray-500">Role</dt>
+            <dd class="font-medium">{{ user.role }}</dd>
+        </div>
+        <div>
+            <dt class="text-sm text-gray-500">Status</dt>
+            <dd>{{ status_badge(user.status, status=user.status) }}</dd>
+        </div>
+    </dl>
+    {% endcall %}
+
+    {# Activity Card #}
+    {% call card(title="Recent Activity") %}
+    <div class="space-y-4">
+        <div class="flex items-start gap-3">
+            <div class="w-2 h-2 mt-2 rounded-full bg-success"></div>
+            <div>
+                <p class="font-medium">Logged in</p>
+                <p class="text-sm text-gray-500">2 hours ago</p>
+            </div>
+        </div>
+        <div class="flex items-start gap-3">
+            <div class="w-2 h-2 mt-2 rounded-full bg-info"></div>
+            <div>
+                <p class="font-medium">Updated profile</p>
+                <p class="text-sm text-gray-500">1 day ago</p>
+            </div>
+        </div>
+        <div class="flex items-start gap-3">
+            <div class="w-2 h-2 mt-2 rounded-full bg-warning"></div>
+            <div>
+                <p class="font-medium">Password changed</p>
+                <p class="text-sm text-gray-500">3 days ago</p>
+            </div>
+        </div>
+    </div>
+    {% endcall %}
+
+    {# Stats Card #}
+    {% call card(title="Statistics") %}
+    <div class="space-y-4">
+        <div class="flex justify-between items-center">
+            <span class="text-gray-500">Total Logins</span>
+            <span class="font-semibold">127</span>
+        </div>
+        <div class="flex justify-between items-center">
+            <span class="text-gray-500">Sessions</span>
+            <span class="font-semibold">3 active</span>
+        </div>
+        <div class="flex justify-between items-center">
+            <span class="text-gray-500">Last Active</span>
+            <span class="font-semibold">2 hours ago</span>
+        </div>
+        <div class="flex justify-between items-center">
+            <span class="text-gray-500">Member Since</span>
+            <span class="font-semibold">Jan 2024</span>
+        </div>
+    </div>
+    {% endcall %}
+</div>
+
+<div class="mt-6">
+    {{ button("Back to Tables", variant="outline", href="/tables") }}
+</div>
+{% endblock %}

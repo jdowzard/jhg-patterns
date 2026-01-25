@@ -1,0 +1,72 @@
+{#
+    Badge Macros
+
+    Usage:
+        {% from "macros/badges.html" import badge, status_badge %}
+
+        {{ badge("New", variant="info") }}
+        {{ status_badge("Active", status="success") }}
+        {{ status_badge("Pending", status="warning") }}
+#}
+
+{% macro badge(text, variant="neutral", size="md", icon=none) %}
+{%- set size_class = {"sm": "text-xs px-2 py-0.5", "md": "", "lg": "text-base px-4 py-1"}.get(size, "") -%}
+<span class="ds-badge ds-badge-{{ variant }} {{ size_class }}">
+    {%- if icon -%}
+    <span class="mr-1">{{ icon|safe }}</span>
+    {%- endif -%}
+    {{ text }}
+</span>
+{% endmacro %}
+
+
+{% macro status_badge(text, status="neutral") %}
+{#- Map common status values to variants -#}
+{%- set variant_map = {
+    "active": "success",
+    "completed": "success",
+    "done": "success",
+    "met": "success",
+    "ok": "success",
+    "approved": "success",
+
+    "pending": "warning",
+    "in_progress": "warning",
+    "review": "warning",
+    "escalated": "warning",
+    "waiting": "warning",
+
+    "failed": "error",
+    "error": "error",
+    "not_met": "error",
+    "rejected": "error",
+    "overdue": "error",
+
+    "draft": "neutral",
+    "inactive": "neutral",
+    "archived": "neutral",
+
+    "info": "info",
+    "new": "info",
+} -%}
+{%- set variant = variant_map.get(status.lower().replace(" ", "_"), status) -%}
+{{ badge(text, variant=variant) }}
+{% endmacro %}
+
+
+{% macro priority_badge(priority) %}
+{%- set variant_map = {
+    1: "error",
+    2: "warning",
+    3: "info",
+    4: "neutral",
+    5: "neutral",
+    "high": "error",
+    "medium": "warning",
+    "low": "neutral",
+    "critical": "error",
+} -%}
+{%- set variant = variant_map.get(priority, "neutral") -%}
+{%- set text = priority if priority is string else "P" ~ priority -%}
+{{ badge(text, variant=variant, size="sm") }}
+{% endmacro %}

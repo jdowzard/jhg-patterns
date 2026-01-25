@@ -1,0 +1,104 @@
+{#
+    Modal Macros
+
+    Usage:
+        {% from "macros/modals.html" import modal, confirm_modal %}
+
+        {% call modal("my-modal", title="Edit User") %}
+            Modal content here
+        {% endcall %}
+
+        {{ confirm_modal("delete-modal", title="Delete Item", message="Are you sure?", action="/delete") }}
+#}
+
+{% macro modal(id, title, size="md", close_on_backdrop=true) %}
+{%- set size_class = {"sm": "max-w-sm", "md": "max-w-lg", "lg": "max-w-2xl", "xl": "max-w-4xl"}.get(size, "max-w-lg") -%}
+<div
+    id="{{ id }}"
+    class="ds-modal-backdrop"
+    x-data="{ open: false }"
+    x-show="open"
+    x-on:open-{{ id }}.window="open = true"
+    x-on:close-{{ id }}.window="open = false"
+    x-on:keydown.escape.window="open = false"
+    {% if close_on_backdrop %}@click.self="open = false"{% endif %}
+    style="display: none;"
+>
+    <div class="ds-modal {{ size_class }}" @click.stop>
+        <div class="ds-modal-header">
+            <h3 class="ds-modal-title">{{ title }}</h3>
+            <button type="button" class="ds-modal-close" @click="open = false">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <div class="ds-modal-body">
+            {{ caller() }}
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+
+{% macro modal_footer() %}
+<div class="ds-modal-footer">
+    {{ caller() }}
+</div>
+{% endmacro %}
+
+
+{% macro confirm_modal(
+    id,
+    title="Confirm",
+    message="Are you sure you want to proceed?",
+    action=none,
+    method="POST",
+    confirm_text="Confirm",
+    cancel_text="Cancel",
+    variant="danger"
+) %}
+<div
+    id="{{ id }}"
+    class="ds-modal-backdrop"
+    x-data="{ open: false, action: '' }"
+    x-show="open"
+    x-on:open-{{ id }}.window="open = true; action = $event.detail?.action || '{{ action }}'"
+    x-on:close-{{ id }}.window="open = false"
+    x-on:keydown.escape.window="open = false"
+    @click.self="open = false"
+    style="display: none;"
+>
+    <div class="ds-modal max-w-md" @click.stop>
+        <div class="ds-modal-header">
+            <h3 class="ds-modal-title">{{ title }}</h3>
+            <button type="button" class="ds-modal-close" @click="open = false">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <div class="ds-modal-body">
+            <p class="text-gray-600">{{ message }}</p>
+        </div>
+        <div class="ds-modal-footer">
+            <button type="button" class="ds-btn ds-btn-secondary" @click="open = false">{{ cancel_text }}</button>
+            <form :action="action" method="{{ method }}" class="inline">
+                {{ csrf_input() if csrf_input is defined else "" }}
+                <button type="submit" class="ds-btn ds-btn-{{ variant }}">{{ confirm_text }}</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+
+{% macro modal_trigger(modal_id, text, variant="primary", size="md", class_="") %}
+<button
+    type="button"
+    class="ds-btn ds-btn-{{ variant }}{% if size == 'sm' %} ds-btn-sm{% elif size == 'lg' %} ds-btn-lg{% endif %} {{ class_ }}"
+    @click="$dispatch('open-{{ modal_id }}')"
+>
+    {{ text }}
+</button>
+{% endmacro %}

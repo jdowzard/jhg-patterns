@@ -1,0 +1,80 @@
+# Custom Theme Configuration
+# Extends the default JHG theme with app-specific overrides
+
+name: demo
+
+# Brand colors - JHG standard palette
+colors:
+  primary:
+    DEFAULT: "#E63946"    # JH Red
+    dark: "#C5303C"
+    light: "#F5A3A9"
+    bg: "#FEF2F2"
+
+  secondary:
+    DEFAULT: "#5BC0DE"    # JH Cyan
+    dark: "#3AA8C7"
+    light: "#A8DFF0"
+    bg: "#ECFEFF"
+
+  tertiary:
+    DEFAULT: "#8B5CF6"    # JH Purple
+    dark: "#7C3AED"
+    light: "#C4B5FD"
+    bg: "#F5F3FF"
+
+  # Semantic colors
+  success:
+    DEFAULT: "#10B981"
+    dark: "#059669"
+    light: "#6EE7B7"
+    bg: "#ECFDF5"
+
+  warning:
+    DEFAULT: "#F59E0B"
+    dark: "#D97706"
+    light: "#FCD34D"
+    bg: "#FFFBEB"
+
+  error:
+    DEFAULT: "#EF4444"
+    dark: "#DC2626"
+    light: "#FCA5A5"
+    bg: "#FEF2F2"
+
+  # Gray scale
+  gray:
+    "900": "#111827"
+    "800": "#1F2937"
+    "700": "#374151"
+    "600": "#4B5563"
+    "500": "#6B7280"
+    "400": "#9CA3AF"
+    "300": "#D1D5DB"
+    "200": "#E5E7EB"
+    "100": "#F3F4F6"
+    "50": "#F9FAFB"
+
+# Typography
+typography:
+  font_family:
+    - Inter
+    - system-ui
+    - sans-serif
+  font_mono:
+    - JetBrains Mono
+    - Consolas
+    - monospace
+
+# Signature gradient bar: Red (60%) | Cyan (20%) | Purple (20%)
+gradient:
+  - [primary, 60]
+  - [secondary, 80]
+  - [tertiary, 100]
+
+# Component customization
+components:
+  navbar:
+    bg: gray-700
+    height: 4rem
+    gradient_bar: true
