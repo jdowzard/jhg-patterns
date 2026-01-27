@@ -286,6 +286,45 @@ class DesignSystem:
 }
 
 /* ========================================
+   FILTER BUTTONS
+   Use for filtering with small number of options (2-6 items)
+   Preferred over dropdowns for better UX
+   ======================================== */
+
+.ds-filter-group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.ds-filter-btn {
+    background-color: white;
+    border: 1px solid var(--gray-300);
+    color: var(--gray-600);
+    padding: 0.25rem 0.75rem;
+    font-size: 0.75rem;
+    border-radius: 9999px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.ds-filter-btn:hover {
+    background-color: var(--gray-100);
+    border-color: var(--gray-400);
+}
+
+.ds-filter-btn-active {
+    background-color: var(--primary) !important;
+    border-color: var(--primary) !important;
+    color: white !important;
+}
+
+.ds-filter-btn-active:hover {
+    background-color: var(--primary-dark) !important;
+}
+
+/* ========================================
    CARDS
    ======================================== */
 
@@ -296,9 +335,13 @@ class DesignSystem:
     box-shadow: var(--shadow-sm);
 }
 
+.ds-card-hover {
+    transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+
 .ds-card-hover:hover {
     box-shadow: var(--shadow-md);
-    transition: box-shadow 0.15s ease;
+    transform: translateY(-2px);
 }
 
 .ds-card-header {

@@ -192,9 +192,9 @@ uv run pytest
 ```jinja
 {% from "macros/buttons.html" import button %}
 {% from "macros/badges.html" import badge, status_badge %}
-{% from "macros/cards.html" import card, summary_card %}
+{% from "macros/cards.html" import card, summary_card, list_card %}
 {% from "macros/alerts.html" import alert, flash_messages %}
-{% from "macros/forms.html" import input, select, textarea %}
+{% from "macros/forms.html" import input, select, textarea, filter_buttons, filter_or_select %}
 {% from "macros/tables.html" import data_table, pagination %}
 {% from "macros/modals.html" import modal, confirm_modal %}
 {% from "macros/layout.html" import page_header, breadcrumb, empty_state %}
@@ -208,6 +208,7 @@ All classes prefixed with `ds-`:
 - Badges: `ds-badge`, `ds-badge-success`, `ds-badge-error`
 - Alerts: `ds-alert`, `ds-alert-warning`
 - Forms: `ds-input`, `ds-select`, `ds-label`
+- Filters: `ds-filter-group`, `ds-filter-btn`, `ds-filter-btn-active` (use for ≤6 options)
 - Tables: `ds-table`, `ds-table-container`
 - Modals: `ds-modal`, `ds-modal-backdrop`
 - Layout: `ds-page`, `ds-nav`, `ds-footer`
