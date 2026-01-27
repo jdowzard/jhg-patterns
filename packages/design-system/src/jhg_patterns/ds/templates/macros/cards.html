@@ -12,8 +12,15 @@
         {{ stat_card("Active Users", 1234, icon=user_icon) }}
 #}
 
-{% macro card(title=none, subtitle=none, footer=none, hoverable=false, class_="") %}
-<div class="ds-card{% if hoverable %} ds-card-hover{% endif %} {{ class_ }}">
+{% macro card(title=none, subtitle=none, footer=none, hoverable=false, href=none, class_="") %}
+{#- If href provided, card is automatically hoverable and clickable -#}
+{%- set is_clickable = href is not none -%}
+{%- set card_class = "ds-card" ~ (" ds-card-hover" if (hoverable or is_clickable) else "") ~ (" " ~ class_ if class_ else "") -%}
+{%- if is_clickable -%}
+<a href="{{ href }}" class="{{ card_class }} block cursor-pointer">
+{%- else -%}
+<div class="{{ card_class }}">
+{%- endif -%}
     {%- if title -%}
     <div class="ds-card-header">
         <h3 class="text-lg font-semibold text-gray-900">{{ title }}</h3>
@@ -30,7 +37,11 @@
         {{ footer|safe }}
     </div>
     {%- endif -%}
+{%- if is_clickable -%}
+</a>
+{%- else -%}
 </div>
+{%- endif -%}
 {% endmacro %}
 
 
@@ -98,4 +109,48 @@
 <div class="grid grid-cols-1 md:grid-cols-{{ columns }} gap-6">
     {{ caller() }}
 </div>
+{% endmacro %}
+
+
+{% macro list_card(href, badge=none, badge_variant="primary", title=none, subtitle=none, meta=none, class_="") %}
+{#-
+    Clickable card for list/search results. Always a link.
+
+    Usage:
+        {{ list_card(
+            href=url_for('item_detail', id=item.id),
+            badge="Active",
+            badge_variant="success",
+            title=item.name,
+            subtitle=item.description,
+            meta="Updated 2 days ago"
+        ) }}
+-#}
+<a href="{{ href }}" class="ds-card ds-card-hover block cursor-pointer {{ class_ }}">
+    <div class="ds-card-body">
+        {%- if badge -%}
+        <div class="mb-2">
+            <span class="ds-badge ds-badge-{{ badge_variant }}">{{ badge }}</span>
+            {%- if title -%}
+            <span class="font-mono text-sm text-gray-600 ml-2">{{ title }}</span>
+            {%- endif -%}
+        </div>
+        {%- elif title -%}
+        <div class="font-semibold text-gray-900 mb-2">{{ title }}</div>
+        {%- endif -%}
+
+        {%- if subtitle -%}
+        <p class="text-gray-700 mb-3">{{ subtitle }}</p>
+        {%- endif -%}
+
+        {%- if meta -%}
+        <div class="flex justify-between items-center text-sm">
+            <span class="text-gray-500">{{ meta }}</span>
+            <span class="text-primary font-medium">View Details →</span>
+        </div>
+        {%- else -%}
+        <div class="text-sm text-primary font-medium text-right">View Details →</div>
+        {%- endif -%}
+    </div>
+</a>
 {% endmacro %}
