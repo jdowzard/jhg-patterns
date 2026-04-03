@@ -215,3 +215,82 @@
     </svg>
 </div>
 {% endmacro %}
+
+
+{#
+    Filter Buttons - Use for filtering with small number of options (2-6 items)
+    Preferred over dropdowns for better UX when options are few
+
+    Usage:
+        {{ filter_buttons("status", "Status", [
+            {"value": "", "label": "All"},
+            {"value": "active", "label": "Active"},
+            {"value": "inactive", "label": "Inactive"}
+        ], value="active") }}
+
+    With reset button:
+        {{ filter_buttons("category", "Category", options, show_reset=true) }}
+#}
+{% macro filter_buttons(
+    name,
+    label=none,
+    options=[],
+    value="",
+    show_reset=false,
+    onchange="",
+    class_=""
+) %}
+<div class="ds-filter-group flex flex-wrap items-center gap-2 {{ class_ }}">
+    {%- if label -%}
+    <span class="text-xs text-gray-500 mr-1">{{ label }}:</span>
+    {%- endif -%}
+    {%- for opt in options -%}
+    {%- set opt_value = opt.value if opt is mapping else opt -%}
+    {%- set opt_label = opt.label if opt is mapping else opt -%}
+    <button
+        type="button"
+        data-filter="{{ name }}"
+        data-value="{{ opt_value }}"
+        onclick="{% if onchange %}{{ onchange }}('{{ opt_value }}'){% else %}setFilter_{{ name }}('{{ opt_value }}'){% endif %}"
+        class="ds-filter-btn px-3 py-1 text-xs rounded-full border transition-colors
+               {% if opt_value == value %}ds-filter-btn-active{% endif %}"
+    >
+        {{ opt_label }}
+    </button>
+    {%- endfor -%}
+    {%- if show_reset -%}
+    <span class="text-gray-300 mx-1">|</span>
+    <button
+        type="button"
+        onclick="resetFilter_{{ name }}()"
+        class="px-3 py-1 text-xs rounded-full border border-gray-300 text-gray-600 hover:bg-gray-100 transition-colors"
+    >
+        Reset
+    </button>
+    {%- endif -%}
+</div>
+{% endmacro %}
+
+
+{#
+    Filter or Select - Automatically chooses between filter buttons and dropdown
+    based on the number of options. Use filter buttons for ≤6 options.
+
+    Usage:
+        {{ filter_or_select("status", "Status", options) }}
+#}
+{% macro filter_or_select(
+    name,
+    label=none,
+    options=[],
+    value="",
+    threshold=6,
+    onchange="",
+    class_=""
+) %}
+{%- if options|length <= threshold -%}
+{{ filter_buttons(name, label, options, value, onchange=onchange, class_=class_) }}
+{%- else -%}
+{{ select(name, label, options, value, class_=class_) }}
+{%- endif -%}
+{% endmacro %}

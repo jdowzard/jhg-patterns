@@ -202,9 +202,10 @@ class Theme:
         typography = None
         if "typography" in data:
             t = data["typography"]
+            defaults = Typography()
             typography = Typography(
-                font_family=t.get("font_family", Typography.font_family),
-                font_mono=t.get("font_mono", Typography.font_mono),
+                font_family=t.get("font_family", defaults.font_family),
+                font_mono=t.get("font_mono", defaults.font_mono),
             )
 
         # Gradient stops
